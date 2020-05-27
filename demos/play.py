@@ -18,6 +18,7 @@ POLICY_FUNC = {
     "lstm": LSTMPolicy,
 }
 
+
 @click.command()
 @click.option("--env", type=str,
               default="RoboSumo-Ant-vs-Ant-v0", show_default=True,
@@ -29,9 +30,8 @@ POLICY_FUNC = {
               default=(1, 1), show_default=True,
               help="Policy parameter versions.")
 @click.option("--max_episodes", type=int,
-              default=20, show_default=True,
+              default=2, show_default=True,
               help="Number of episodes.")
-
 def main(env, policy_names, param_versions, max_episodes):
     # Construct paths to parameters
     curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -74,21 +74,27 @@ def main(env, policy_names, param_versions, max_episodes):
 
     # Play matches between the agents
     num_episodes, nstep = 0, 0
-    total_reward = [0.0  for _ in range(len(policy))]
+    total_reward = [0.0 for _ in range(len(policy))]
     total_scores = [0 for _ in range(len(policy))]
     observation = env.reset()
     print("-" * 5 + "Episode %d " % (num_episodes + 1) + "-" * 5)
     while num_episodes < max_episodes:
-        env.render()
+        # env.render()
+        env.render(mode='human')
         action = tuple([
             pi.act(stochastic=True, observation=observation[i])[0]
             for i, pi in enumerate(policy)
         ])
+        # print("type is: ", type(policy[0]))
+        # print("action is: ", action)
         observation, reward, done, infos = env.step(action)
+        # print("reward is: ", reward)
+        # print("observation0 shape is: ", observation[0].shape)
 
         nstep += 1
         for i in range(len(policy)):
             total_reward[i] += reward[i]
+            # print("total reward is: ", total_reward)
         if done[0]:
             num_episodes += 1
             draw = True
@@ -103,13 +109,15 @@ def main(env, policy_names, param_versions, max_episodes):
                       .format(i, total_scores, num_episodes))
             observation = env.reset()
             nstep = 0
-            total_reward = [0.0  for _ in range(len(policy))]
+            total_reward = [0.0 for _ in range(len(policy))]
 
             for i in range(len(policy)):
                 policy[i].reset()
 
             if num_episodes < max_episodes:
                 print("-" * 5 + "Episode %d " % (num_episodes + 1) + "-" * 5)
+
+    print("total reward is: ", total_reward)
 
 
 if __name__ == "__main__":
